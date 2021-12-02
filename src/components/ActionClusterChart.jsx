@@ -10,7 +10,7 @@ const onLoad = (reactFlowInstance) => {
 function ActionClusterChart(props) {
     console.log(props.data);
     return (
-        <div className="polka-dot">
+        <div>
             <ReactFlow onLoad={onLoad} nodeTypes={"output"} elements={props.data}  style={flowStyles} data={{text:'hello'}}>
                 <Background />
             </ReactFlow>

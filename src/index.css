@@ -22,3 +22,9 @@
     stroke: transparent;
     stroke-width: 28;
 }
+
+.diagram-component {
+  width: 1024px;
+  height: 720px;
+  border: 1px solid blueviolet;
+}

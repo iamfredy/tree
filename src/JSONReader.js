@@ -4,13 +4,14 @@ import ActionClusterChart from './components/ActionClusterChart';
 import PrettyPrintJson from './PrettyPrintJson'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import randomColor  from 'randomcolor';
+import GoJSComponent from './components/GoJSComponent';
 
 
 export default function JSONReader() {
 
     const [prettyJSON,setPrettyJSON]=useState({});
     const [nodeData, setNodeData] = useState([]);
-    const [isChartLoaded, setisChartLoaded] = useState(false);
+    const [chartLoaded, setChartLoaded] = useState("");
     const [showModal, setShowModal] = useState(false);
 
     function populatePayload(event){
@@ -28,6 +29,7 @@ export default function JSONReader() {
     let edges=[];
     const NODE_WIDTH=400;
     const NODE_HEIGHT=300;
+    let nodesForGoJS=[];
     
     const loadData=()=>{
         jsonArr=[];
@@ -40,7 +42,7 @@ export default function JSONReader() {
                 })
                 jsonArr.push(...edges);
                 setNodeData(jsonArr);
-                setisChartLoaded(true);
+                setChartLoaded("REACT_FLOW");
         } catch (error) {
             console.log("Invalid Action Cluster JSON");
             setShowModal(true);
@@ -120,6 +122,68 @@ const pushToLevelVsChildrenMap=(level,nodeId)=>{
     }
     levelVsNumberOfNodes.set(level,currentNodesInLevel);
   }
+
+const loadDataForGoJS=()=>{
+  nodesForGoJS=[];
+  // var yPosition=NODE_HEIGHT*(levelVsNumberOfNodes.size+1);
+  //TODO Need to Calculate the starting Y position for each ROOT node
+  try {
+      prettyJSON.forEach((node)=>{
+        getJSONObjFromNodeForGOJS(node,100,5,1,undefined);
+      });
+      console.log(nodesForGoJS);
+      setNodeData(nodesForGoJS);
+      setChartLoaded("GOJS");
+  } catch (error) {
+      console.log("Invalid Action Cluster JSON");
+      setShowModal(true);
+  }
+}
+
+
+const getJSONObjFromNodeForGOJS=(node,x,y,level,parent)=>{
+  let jsonData={};
+  const nodeId=node.automationAction.mappingId;
+  jsonData.key=nodeId;
+  jsonData.text= node.nodeType+"\n"+node.automationAction.executionType+"\n"+node.automationAction.mappingId;
+  jsonData.loc=x+" "+y;
+
+  if(node.nodeType==="ROOT"){
+    jsonData.color="yellow"
+  }
+  else if(node.nodeType==="SUCCESS"){
+    jsonData.color= "green"
+  }
+  else if(node.nodeType==="FAILURE"){
+    jsonData.color= "red"
+  }
+  else{
+    jsonData.color= "blue"
+  }
+  if(parent){
+    jsonData.parent=parent;
+  }
+
+  pushToLevelVsChildrenMap(level,node.automationAction.mappingId);
+  nodesForGoJS.push(jsonData);
+  const children=node.childActions;
+  const parentID=node.automationAction.mappingId;
+//   const childY=150*(level)+(150*levelVsNumberOfNodes.size+1);
+  const childY=NODE_HEIGHT*(level);
+  var childIndex=0;
+  children.forEach((child)=>{
+      childIndex++;
+      const childLevel=level+1;
+      pushToLevelVsChildrenMap(childLevel,child.automationAction.mappingId);
+      const noOfChildrenInLevel=levelVsNumberOfNodes.has(childLevel)?levelVsNumberOfNodes.get(childLevel).length:1;
+      var childX=NODE_WIDTH*noOfChildrenInLevel;
+      if(childIndex!==noOfChildrenInLevel){
+        childX=childX+10;
+      }
+      getJSONObjFromNodeForGOJS(child,childX,childY,childLevel,parentID);
+  });
+}
+
     
   if(showModal){
     return (
@@ -141,15 +205,17 @@ const pushToLevelVsChildrenMap=(level,nodeId)=>{
 
 
 
-    if(isChartLoaded){
+    if(chartLoaded!==""){
         return(
         <div>    
             <div className="row">
-                <Button type="button" value="Submit JSON" onClick={()=>{setisChartLoaded(false)}}>Hide Chart</Button>
+                <Button type="button" onClick={()=>{setChartLoaded("")}}>Hide Chart</Button>
             </div>    
             <br/>     
             <div className="row">
-                <ActionClusterChart className="col-sm-6"  data={nodeData}></ActionClusterChart>
+                {chartLoaded==="REACT_FLOW" && <ActionClusterChart className="col-sm-6"  data={nodeData}></ActionClusterChart>}}
+                {chartLoaded==="GOJS" &&  <GoJSComponent className="col-sm-6"  data={nodeData}></GoJSComponent>}
+
             </div>
           </div>
         )
@@ -159,9 +225,12 @@ const pushToLevelVsChildrenMap=(level,nodeId)=>{
         return (    
         <div> 
             <h1 className="text-secondary">Action Cluster Visualizer</h1>            
-            <textarea rows="4" cols="100" type="textarea" placeholder="Enter Action Cluster JSON payload Here" onChange={populatePayload}></textarea >
+            <textarea rows="6" cols="200" type="textarea" placeholder="Enter Action Cluster JSON payload Here" onChange={populatePayload}></textarea >
             <br/>
-            <Button type="button" value="Submit JSON" onClick={loadData}>Load Acton Cluster Chart</Button>
+            <div className="row">
+              <Button className="col-sm-6" type="button"  variant="outline-info" onClick={loadDataForGoJS}>Load Acton Cluster Chart via GOJS</Button>           
+              <Button className="col-sm-6" type="button" variant="outline-success" onClick={loadData}>Load Acton Cluster Chart via React Flow</Button>
+            </div>
             <div className="row">
                 {<PrettyPrintJson className="col-sm-6" data={prettyJSON} ></PrettyPrintJson>}   
             </div>
