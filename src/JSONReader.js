@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Button, Modal } from 'react-bootstrap';
+import { Button, Modal, Table } from 'react-bootstrap';
 import ActionClusterChart from './components/ActionClusterChart';
 import PrettyPrintJson from './PrettyPrintJson'
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -37,7 +37,9 @@ export default function JSONReader() {
         // var yPosition=NODE_HEIGHT*(levelVsNumberOfNodes.size+1);
         //TODO Need to Calculate the starting Y position for each ROOT node
         try {
-            prettyJSON.forEach((node)=>{
+
+            var nodesJSON=prettyJSON.actions;          
+            nodesJSON.forEach((node)=>{
                 getJSONObjFromNode(node,100,5,1);
                 })
                 jsonArr.push(...edges);
@@ -128,7 +130,8 @@ const loadDataForGoJS=()=>{
   // var yPosition=NODE_HEIGHT*(levelVsNumberOfNodes.size+1);
   //TODO Need to Calculate the starting Y position for each ROOT node
   try {
-      prettyJSON.forEach((node)=>{
+      var nodesJSON=prettyJSON.actions; 
+      nodesJSON.forEach((node)=>{
         getJSONObjFromNodeForGOJS(node,100,5,1,undefined);
       });
       console.log(nodesForGoJS);
@@ -213,6 +216,27 @@ const getJSONObjFromNodeForGOJS=(node,x,y,level,parent)=>{
             </div>    
             <br/>     
             <div className="row">
+                {chartLoaded!=="" &&
+                <div>
+                    <Table  bordered hover>
+                      <tbody style={{color:'gray',borderColor:"whitesmoke"}} >
+                        <tr>
+                          <td>Cluster Name</td>
+                          <td>{prettyJSON.name}</td>
+                        </tr>
+                        <tr>
+                          <td>Cluster ID</td>
+                          <td>{prettyJSON.clusterID}</td>
+                        </tr>
+                        <tr>
+                          <td>Cluster Type</td>
+                          <td>{prettyJSON.type}</td>
+                        </tr>
+                      </tbody>
+                    </Table>
+                </div>
+                
+                }
                 {chartLoaded==="REACT_FLOW" && <ActionClusterChart className="col-sm-6"  data={nodeData}></ActionClusterChart>}}
                 {chartLoaded==="GOJS" &&  <GoJSComponent className="col-sm-6"  data={nodeData}></GoJSComponent>}
 
@@ -228,8 +252,8 @@ const getJSONObjFromNodeForGOJS=(node,x,y,level,parent)=>{
             <textarea rows="6" cols="200" type="textarea" placeholder="Enter Action Cluster JSON payload Here" onChange={populatePayload}></textarea >
             <br/>
             <div className="row">
-              <Button className="col-sm-6" type="button"  variant="outline-info" onClick={loadDataForGoJS}>Load Acton Cluster Chart via GOJS</Button>           
-              <Button className="col-sm-6" type="button" variant="outline-success" onClick={loadData}>Load Acton Cluster Chart via React Flow</Button>
+              <Button className="col-sm-6" type="button"  variant="outline-info" onClick={loadDataForGoJS}>Visualize using GOJS</Button>           
+              <Button className="col-sm-6" type="button" variant="outline-success" onClick={loadData}>Visualize using React Flow</Button>
             </div>
             <div className="row">
                 {<PrettyPrintJson className="col-sm-6" data={prettyJSON} ></PrettyPrintJson>}   
