@@ -248,7 +248,7 @@ const getJSONObjFromNodeForGOJS=(node,x,y,level,parent)=>{
     else{
         return (    
         <div> 
-            <h1 className="text-secondary">Action Cluster Visualizer</h1>            
+            <h1  style={{'user-select':'none'}}className="text-secondary">Action Cluster Visualizer</h1>            
             <textarea rows="6" cols="200" type="textarea" placeholder="Enter Action Cluster JSON payload Here" onChange={populatePayload}></textarea >
             <br/>
             <div className="row">
